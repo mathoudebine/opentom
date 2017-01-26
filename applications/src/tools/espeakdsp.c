@@ -7,9 +7,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <libgen.h>
 
-#define espeakpath "/mnt/sdcard/opentom/bin/espeak"
+#define ESPEAKPATH "/mnt/sdcard/opentom/bin/espeak"
 #define IBUFFERLEN 1024
 #define MAXARGC 30
 
@@ -54,8 +53,8 @@ int  main(int argc, char *argv[],char *envp[])
 
 		close(pipefd[0]);          /* Close unused read end */
 		dup2(pipefd[1],1);
-		execve(espeakpath,newargv,envp);	      
-		perror(espeakpath);	
+		execve(ESPEAKPATH,newargv,envp);
+		perror(ESPEAKPATH);
 		close(pipefd[1]);          /* Reader will see EOF */
 		wait(NULL);                /* Wait for child */
 		exit(EXIT_SUCCESS);
