@@ -6,6 +6,7 @@ export LANG=en_US.utf8
 # For GPS chips without NMEA output gltt is used
 if [ `cat /proc/barcelona/gpstype` == 3 ] ; then
 	ln -sf /dev/`cat /proc/barcelona/gpsdev` /var/run/gpspipe
+	sirfrestart.sh /var/run/gpspipe
 else
 	ls $DIST/bin/gltt || {
 		echo "You need TomTom(tm) gltt\nPlease read documentation." | flmessage -s -t "Can't start Navit"
