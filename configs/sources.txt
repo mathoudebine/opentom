@@ -6,8 +6,8 @@ wget https://downloads.sourceforge.net/libpng/zlib-1.2.11.tar.gz
 [ -f $1 ] || { cd ../build && wget http://downloads.sourceforge.net/libjpeg/6b/jpegsrc.v6b.tar.gz && tar -zxvf jpegsrc.v6b.tar.gz && sed -i 's/${CC-cc}/gcc/g' jpeg-6b/config.guess && mv jpeg-6b/ libjpeg-6b/ && tar czf ../Downloads/libjpeg-6b.tar.gz libjpeg-6b; }
 wget http://download.savannah.gnu.org/releases/freetype/freetype-old/freetype-2.3.12.tar.gz
 wget ftp://ftp.icm.edu.pl/pub/unix/graphics/GraphicsMagick/delegates/libpng-1.6.28.tar.gz
-wget ftp://microwindows.org/pub/microwindows/microwindows-full-snapshot.tar.gz -O microwin_9ffcd17.tgz
-wget ftp://microwindows.org/pub/microwindows/nxlib-src-snapshot.tar.gz -O nxlib_7adaf0e.tgz
+[ -f $1 ] || { cd ../build && git clone https://github.com/ghaerr/microwindows.git microwin && cd microwin && git checkout 9ffcd17 && cd .. && tar czf ../Downloads/microwin_9ffcd17.tgz microwin; }
+[ -f $1 ] || { cd ../build && git clone https://github.com/ghaerr/nxlib.git && cd nxlib && git checkout 7adaf0e && cd .. && tar czf ../Downloads/nxlib_7adaf0e.tgz nxlib; }
 wget http://www.libsdl.org/release/SDL-1.2.15.tar.gz
 wget http://www.libsdl.org/projects/SDL_image/release/SDL_image-1.2.12.tar.gz
 wget http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.12.tar.gz
