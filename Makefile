@@ -184,14 +184,17 @@ $(ARM_ROOT)/usr/include/microwin/nano-X.h: $(ARM_ROOT)/usr/include/zlib.h $(ARM_
 		cp bin/convb* $(ARM_APPROOT)/bin; \
 	}
 
-build/microwin/src: $(DOWNLOADS)/microwin_9ffcd17.tgz
+#build/microwin/src: $(DOWNLOADS)/microwin_9ffcd17.tgz
+build/microwin/src: $(DOWNLOADS)/microwin_master.tgz
 	cd build && { \
 		if ! test -d microwin; then \
-			tar xf ../Downloads/microwin_9ffcd17.tgz; \
+			#tar xf ../Downloads/microwin_9ffcd17.tgz; \
+			tar xf ../Downloads/microwin_master.tgz; \
 		else \
 			touch microwin/src; \
 		fi; \
-		cd microwin && patch -p1 <$(ROOT)/patchs/microwin_git_opentom.patch; \
+		#cd microwin && patch -p1 <$(ROOT)/patchs/microwin_git_opentom.patch; \
+		cd microwin && patch -p1 <$(ROOT)/patchs/microwin_master.patch; \
 	}
 
 dropbear: $(TOMDIST)/bin/dropbear
@@ -325,10 +328,10 @@ $(ARM_ROOT)/usr/include/X11/X.h: build/nxlib $(ARM_ROOT)/usr/include/microwin/na
 	cd $(ARM_ROOT)/usr/lib && ln -s libX11.so libX11.so.0
 
 
-build/nxlib: $(DOWNLOADS)/nxlib_7adaf0e.tgz
+build/nxlib: $(DOWNLOADS)/nxlib_master.tgz
 	cd build && { \
                 if ! test -d nxlib; then \
-                        tar xf ../Downloads/nxlib_7adaf0e.tgz; \
+                        tar xf ../Downloads/nxlib_master.tgz; \
                 else \
                         touch nxlib; \
 		fi; \
@@ -474,7 +477,8 @@ $(TOMDIST): nano-X
 	mkdir -p $(TOMDIST)/logs
 	cp -R src/opentom_skel/* $(TOMDIST)/
 	cp $(ARM_APPROOT)/bin/nano-X $(TOMDIST)/bin
-	cd build/microwin/src/bin && cp nanowm setportrait nxeyes nxclock nxroach nxmag nxview slider vnc $(TOMDIST)/bin
+#	cd build/microwin/src/bin && cp nanowm setportrait nxeyes nxclock nxroach nxmag nxview slider vnc $(TOMDIST)/bin
+	cd build/microwin/src/bin && cp nanowm nxeyes nxclock nxroach nxmag nxview slider $(TOMDIST)/bin
 	mkdir -p $(TOMDIST)/lib/ts/
 	cp -R $(ARM_SYSROOT)/usr/lib/ts/*.so $(TOMDIST)/lib/ts/
 	cp $(ARM_SYSROOT)/usr/bin/ts_calibrate $(ARM_SYSROOT)/usr/bin/ts_test  $(TOMDIST)/bin

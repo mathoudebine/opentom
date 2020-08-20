@@ -1,0 +1,260 @@
+diff --git a/src/Arch.rules b/src/Arch.rules
+index 844c822..11c18cf 100644
+--- a/src/Arch.rules
++++ b/src/Arch.rules
+@@ -77,7 +77,7 @@ WARNINGS += -Wpointer-arith
+ WARNINGS += -Wbad-function-cast
+ #WARNINGS += -Wstrict-prototypes				# win32 FARPROC can't be strict
+ else
+-WARNINGS += -Wno-pointer-to-int-cast			# win32 converts pointers to ints with menuID,ctrlID,atoms,rsrcs
++#WARNINGS += -Wno-pointer-to-int-cast			# win32 converts pointers to ints with menuID,ctrlID,atoms,rsrcs
+ endif
+ 
+ ##############################################################################
+diff --git a/src/Makefile.rules b/src/Makefile.rules
+index f40b54a..ed39780 100644
+--- a/src/Makefile.rules
++++ b/src/Makefile.rules
+@@ -299,6 +299,7 @@ endif
+ ##############################################################################
+ # Handle screen, keyboard and mouse config options
+ ##############################################################################
++LDFLAGS += -lts
+ DEFINES += -DMWPIXEL_FORMAT=$(SCREEN_PIXTYPE)
+ HOSTCFLAGS += -DMWPIXEL_FORMAT=$(SCREEN_PIXTYPE)
+ # Some screen drivers use SCREEN_PIXTYPE instead of MWPIXEL_FORMAT (FIXME)
+@@ -438,7 +439,7 @@ ifeq ($(dirs), )
+ # but ignore the demos/ directory (if present).
+ # Save the list of directory names to $(dirs) - this
+ # variable is empty if the directories do not exist.
+-dirs := $(dir $(wildcard $(MW_DIR_SRC)/$(MW_DIR_RELATIVE)*/Makefile))
++dirs := $(sort $(dir $(wildcard $(MW_DIR_SRC)/$(MW_DIR_RELATIVE)*/Makefile)))
+ dirs := $(filter-out $(MW_DIR_SRC)/$(MW_DIR_RELATIVE)demos/,$(dirs))
+ dirs := $(filter-out $(MW_DIR_SRC)/$(MW_DIR_RELATIVE)test/,$(dirs))		# FIXME
+ dirs := $(filter-out $(MW_DIR_SRC)/$(MW_DIR_RELATIVE)ptest/,$(dirs))	# FIXME
+@@ -702,9 +703,9 @@ ifeq ($(ARCH), RTEMS)
+   LIBINSTALLDIR = $(RTEMS_MAKEFILE_PATH)/lib
+   BININSTALLDIR = $(RTEMS_MAKEFILE_PATH)/bin
+ else
+-  INSTALL_PREFIX  = /usr
+-  INSTALL_OWNER1  = -o root -g root
+-  INSTALL_OWNER2  = -o root -g bin
++  INSTALL_PREFIX  = $(ARM_APPROOT)
++  INSTALL_OWNER1  =
++  INSTALL_OWNER2  =
+   HDRINSTALLDIR = $(INSTALL_PREFIX)/include/microwin
+   LIBINSTALLDIR = $(INSTALL_PREFIX)/lib
+   BININSTALLDIR = $(INSTALL_PREFIX)/bin
+diff --git a/src/config b/src/config
+index 00064d4..d53c7bd 100644
+--- a/src/config
++++ b/src/config
+@@ -2,6 +2,7 @@
+ # config - Microwindows and Nano-X configuration file
+ #
+ # Set target architecture using ARCH= from options in Arch.rules
++# Set drawing method: X11 or FRAMEBUFFER/MOUSE/KEYBOARD options
+ # Set SCREEN/MOUSE/KEYBOARD drivers (typically X11 or FB)
+ # Set various libraries to build or include and their locations
+ #
+@@ -14,15 +15,15 @@
+ # Target platform and compilation options
+ #
+ ####################################################################
+-ARCH                     = MACOSX
+-SHAREDLIBS               = Y
+-SHAREDLINK               = Y
++ARCH                     = LINUX-ARM
++SHAREDLIBS               = N
++SHAREDLINK               = N
+ #EXTRAFLAGS               = -Wall -Wno-missing-prototypes
+ DEBUG                    = N
+ OPTIMIZE                 = Y
+ #OPTIMIZE                 = -O1
+ VERBOSE                  = N
+-THREADSAFE               = Y
++THREADSAFE               = N
+ PARALLEL                 = N
+ 
+ ####################################################################
+@@ -30,14 +31,13 @@ PARALLEL                 = N
+ # Set SCREEN=X11 for X11, SCREEN=FB for framebuffer drawing
+ # Screen size/depth for X11, FBE and non-dynamic framebuffer systems
+ ####################################################################
+-SCREEN                   = X11
+-MOUSE                    =
+-KEYBOARD                 =
+-SCREEN_WIDTH             = 1024
+-SCREEN_HEIGHT            = 768
+-X11LIBLOCATION           = /usr/X11/lib
+-X11HDRLOCATION           = /usr/X11/include
+-EXTENGINELIBS            +=
++SCREEN                   = FB
++MOUSE                    = TSLIBMOUSE
++KEYBOARD                 = NOKBD
++SCREEN_WIDTH             = 480
++SCREEN_HEIGHT            = 272
++#X11LIBLOCATION           = /usr/X11/lib
++#X11HDRLOCATION           = /usr/X11/include
+ 
+ ####################################################################
+ #
+@@ -47,18 +47,18 @@ EXTENGINELIBS            +=
+ MICROWIN                 = Y
+ NANOX                    = Y
+ NUKLEARUI                = Y
+-NX11                     = Y
++NX11                     = N
+ ENGINE                   = N
+-TINYWIDGETS              = Y
++TINYWIDGETS              = N
+ 
+ ####################################################################
+ #
+ # Applications and demos to build
+ #
+ ####################################################################
+-FBEMULATOR               = Y
++FBEMULATOR               = N
+ MICROWINDEMO             = Y
+-MICROWINMULTIAPP         = Y
++MICROWINMULTIAPP         = N
+ NANOXDEMO                = Y
+ HAVE_VNCSERVER_SUPPORT   = N
+ VNCSERVER_PTHREADED      = N
+@@ -97,18 +97,18 @@ HAVE_XPM_SUPPORT         = Y
+ ####################################################################
+ # JPEG support through libjpeg, see README.txt in contrib/jpeg
+ ####################################################################
+-HAVE_JPEG_SUPPORT        = N
+-INCJPEG                  =
+-LIBJPEG                  = -ljpeg
++HAVE_JPEG_SUPPORT        = Y
++INCJPEG                  = $(ARM_APPROOT)/include/
++LIBJPEG                  = $(ARM_APPROOT)/lib/libjpeg.so
+ 
+ ####################################################################
+ # PNG support via libpng and libz
+ ####################################################################
+ HAVE_PNG_SUPPORT         = Y
+-INCPNG                   =
+-LIBPNG                   = -lpng
+-INCZ                     =
+-LIBZ                     = -lz
++INCPNG                   = $(ARM_APPROOT)/include/libpng16
++LIBPNG                   = $(ARM_APPROOT)/lib/libpng.so
++INCZ                     = 
++LIBZ                     = $(ARM_APPROOT)/lib/libz.so
+ 
+ ####################################################################
+ # TIFF support through libtiff
+@@ -129,8 +129,8 @@ PCF_FONT_DIR             = "fonts/pcf"
+ ####################################################################
+ HAVE_FREETYPE_2_SUPPORT  = Y
+ HAVE_HARFBUZZ_SUPPORT    = N
+-INCFT2LIB                = /usr/local/include
+-LIBFT2LIB                = -lfreetype -lbz2
++INCFT2LIB                = $(ARM_APPROOT)/include/freetype2
++LIBFT2LIB                = $(ARM_APPROOT)/lib/libfreetype.so
+ #LIBFT2LIB                += -lharfbuzz
+ FREETYPE_FONT_DIR        = "fonts/truetype"
+ 
+@@ -141,7 +141,7 @@ FREETYPE_FONT_DIR        = "fonts/truetype"
+ HAVE_T1LIB_SUPPORT       = N
+ T1LIB_FONT_DIR           = "fonts/type1"
+ INCT1LIB                 =
+-LIBT1LIB                 = -lt1
++LIBT1LIB                 = $(ARM_APPROOT)/lib/libt1.so
+ 
+ ####################################################################
+ # FNT font support - .fnt/.fnt.gz loadable fonts (native bdf-converted)
+@@ -185,7 +185,7 @@ LIBFRIBIDI               = -lfribidi
+ # ERASEMOVE (nanowm) repaints only backgrounds while window dragging
+ # Otherwise an XOR redraw is used for window moves only after button up
+ # UPDATEREGIONS (win32 api only)paints in update clipping region only
+-ERASEMOVE                = Y
++ERASEMOVE                = N
+ UPDATEREGIONS            = Y
+ 
+ # Generate screen driver interface only with no fonts or clipping
+@@ -198,10 +198,10 @@ NOCLIPPING               = N
+ # set GRAYPALETTE to link with Gray Palette (valid only for 4bpp modes)
+ # set HAVETEXTMODE=Y for systems that can switch between text & graphics.
+ USE_EXPOSURE             = Y
+-VTSWITCH                 = N
++VTSWITCH                 = Y
+ FBREVERSE                = N
+ GRAYPALETTE              = N
+-HAVETEXTMODE             = N
++HAVETEXTMODE             = Y
+ 
+ ####################################################################
+ # Screen pixel format
+@@ -226,10 +226,9 @@ HAVETEXTMODE             = N
+ # define MWPF_TRUECOLOR233  /* pixel is packed 8 bits BGR 332*/
+ # SCREEN_DEPTH is bits per pixel, only used with MWPF_PALETTE palette mode
+ ####################################################################
+-SCREEN_PIXTYPE           = MWPF_TRUECOLORARGB
++SCREEN_PIXTYPE           = MWPF_TRUECOLOR565
+ #SCREEN_PIXTYPE           = MWPF_TRUECOLORABGR
+ #SCREEN_PIXTYPE           = MWPF_TRUECOLOR565
+-#SCREEN_PIXTYPE           = MWPF_PALETTE
+ SCREEN_DEPTH             = 8
+ 
+ ####################################################################
+diff --git a/src/drivers/deprecated/mou_touchscreen.c b/src/drivers/deprecated/mou_touchscreen.c
+index c592a09..4713531 100644
+--- a/src/drivers/deprecated/mou_touchscreen.c
++++ b/src/drivers/deprecated/mou_touchscreen.c
+@@ -50,6 +50,7 @@
+ #ifdef TOUCHSCREEN_TOMTOM
+ #include "touchscreen_tomtom.h"
+ #include "ttmouse_init.h"
++int ts_tomtom_yres = 239;
+ #endif
+ 
+ #ifndef TS_DEVICE
+@@ -69,6 +70,8 @@ static int PD_Open(MOUSEDEVICE *pmd)
+ 
+ 	#ifdef TOUCHSCREEN_TOMTOM
+   		if (ttmouse_init() < 0) EPRINTF("TomTom touchscreen calibration failed\n");
++		char *env;
++		if((env = getenv("NANOX_YRES")) != NULL) ts_tomtom_yres = atoi(env) - 1;
+ 	#endif
+ 
+ 	GdHideCursor(&scrdev);  
+@@ -120,7 +123,8 @@ static int PD_Read(MWCOORD *px, MWCOORD *py, MWCOORD *pz, int *pb)
+ 	*px = event.x;
+ 	#ifdef TOUCHSCREEN_TOMTOM
+ 		// TomTom crazyness
+-		*py = 239 - event.y;	
++		// CLM *py = 239 - event.y;	
++		*py = ts_tomtom_yres - event.y;	
+ 	#else
+ 		*py = event.y;
+ 	#endif
+diff --git a/src/engine/font_fnt.c b/src/engine/font_fnt.c
+index 4e0d138..e067e8c 100644
+--- a/src/engine/font_fnt.c
++++ b/src/engine/font_fnt.c
+@@ -109,6 +109,7 @@ fnt_createfont(const char *name, MWCOORD height, MWCOORD width, int attr)
+ 	PMWCFONT	cfont;
+ 	int		uc16;
+ 
++DPRINTF("fnt_createfont('%s', %d, %d, %x)\n", name, height, width, attr);
+ 	/* try to open file and read in font data*/
+ 	cfont = fnt_load_font(name);
+ 	if (!cfont)
+diff --git a/src/include/mwtypes.h b/src/include/mwtypes.h
+index 9bc2681..aaec80d 100644
+--- a/src/include/mwtypes.h
++++ b/src/include/mwtypes.h
+@@ -223,7 +223,7 @@
+  *       calling the GrArea function(s).
+  */
+ #ifndef MWPIXEL_FORMAT
+-#define MWPIXEL_FORMAT	MWPF_TRUECOLORARGB
++#define MWPIXEL_FORMAT	MWPF_TRUECOLOR565
+ #endif
+ 
+ #if defined(__AS386_16__)
